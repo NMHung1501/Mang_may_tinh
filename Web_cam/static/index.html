@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>QM Meet - Họp Trực Tuyến Sống Động</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <!-- Background Ambient Glow Effect -->
+  <div class="ambient-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- MÀN HÌNH ĐĂNG NHẬP / VÀO NHANH -->
+  <div id="auth-screen" class="screen-container">
+    <div class="auth-card glass-panel">
+      <div class="brand-header">
+        <div class="brand-icon">✨</div>
+        <h2>QM Meet</h2>
+        <p class="subtitle">Kết nối mượt mà - Đảm bảo nhìn thấy nhau 100%</p>
+      </div>
+
+      <div class="tab-buttons">
+        <button id="tab-quick" class="active" onclick="switchAuthTab('quick')">Vào Nhanh</button>
+        <button id="tab-login" onclick="switchAuthTab('login')">Đăng nhập</button>
+        <button id="tab-register" onclick="switchAuthTab('register')">Đăng ký</button>
+      </div>
+
+      <!-- Form Vào Nhanh (Mặc định) -->
+      <form id="form-quick" onsubmit="event.preventDefault(); submitQuickJoin();">
+        <div class="input-group">
+          <label for="quick-nickname">Tên hiển thị của bạn</label>
+          <div class="input-wrapper">
+            <span class="input-icon">👤</span>
+            <input type="text" id="quick-nickname" placeholder="VD: Quang Minh, Lan Anh..." required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="quick-room">Mã phòng họp (Room ID)</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔑</span>
+            <input type="text" id="quick-room" placeholder="VD: phong-hop-1" required>
+            <button type="button" class="btn-random-room" onclick="generateRandomQuickRoom()" title="Tạo mã ngẫu nhiên">🎲</button>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Chọn Avatar đại diện:</label>
+          <div class="avatar-picker" id="quick-avatar-picker">
+            <span class="avatar-option selected" onclick="selectAvatar('👨‍💻')">👨‍💻</span>
+            <span class="avatar-option" onclick="selectAvatar('👩‍💻')">👩‍💻</span>
+            <span class="avatar-option" onclick="selectAvatar('🐱')">🐱</span>
+            <span class="avatar-option" onclick="selectAvatar('🦊')">🦊</span>
+            <span class="avatar-option" onclick="selectAvatar('🤖')">🤖</span>
+            <span class="avatar-option" onclick="selectAvatar('🦁')">🦁</span>
+            <span class="avatar-option" onclick="selectAvatar('🚀')">🚀</span>
+            <span class="avatar-option" onclick="selectAvatar('🌟')">🌟</span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary glow-button">
+          <span>Vào Phòng Họp Ngay</span>
+          <span class="btn-arrow">🚀</span>
+        </button>
+      </form>
+
+      <!-- Form Đăng nhập / Đăng ký tài khoản (Tùy chọn) -->
+      <form id="form-auth" style="display: none;" onsubmit="event.preventDefault(); submitAuth();">
+        <div class="input-group">
+          <label for="auth-username">Tên đăng nhập</label>
+          <div class="input-wrapper">
+            <span class="input-icon">👤</span>
+            <input type="text" id="auth-username" placeholder="Nhập tên đăng nhập..." autocomplete="username">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="auth-password">Mật khẩu</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="auth-password" placeholder="Nhập mật khẩu..." autocomplete="current-password">
+          </div>
+        </div>
+
+        <div id="register-fields" style="display: none;">
+          <div class="input-group">
+            <label for="auth-nickname">Tên hiển thị (Nickname)</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🏷️</span>
+              <input type="text" id="auth-nickname" placeholder="VD: Quang Minh">
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary glow-button" id="btn-auth-submit">
+          <span>Đăng Nhập</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MÀN HÌNH CHỌN PHÒNG HỌP (SAU KHI ĐĂNG NHẬP BẰNG TÀI KHOẢN) -->
+  <div id="room-selection-screen" class="screen-container" style="display: none;">
+    <div class="auth-card glass-panel">
+      <div class="user-profile-badge">
+        <div class="avatar-wrapper">
+          <span id="user-display-avatar" class="big-avatar">👤</span>
+          <span class="online-indicator"></span>
+        </div>
+        <h3 id="user-display-name">Xin chào!</h3>
+        <span class="user-handle" id="user-display-handle">@username</span>
+      </div>
+      
+      <div class="input-group">
+        <label for="room-input">Mã phòng họp (Room ID):</label>
+        <div class="input-wrapper">
+          <span class="input-icon">🔑</span>
+          <input type="text" id="room-input" placeholder="Nhập mã phòng (VD: room-123)...">
+          <button type="button" class="btn-random-room" onclick="generateRandomRoom()" title="Tạo mã ngẫu nhiên">🎲</button>
+        </div>
+      </div>
+
+      <div class="room-action-buttons">
+        <button class="btn-primary glow-button" onclick="joinRoom(document.getElementById('room-input').value.trim())">
+          <span>Tham Gia Phòng Họp</span>
+          <span class="btn-arrow">🚀</span>
+        </button>
+        <button class="btn-secondary" onclick="logout()">Đăng xuất</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MÀN HÌNH PHÒNG HỌP VIDEO -->
+  <div id="call-screen" style="display: none;">
+    
+    <!-- Header Call -->
+    <header class="call-header glass-header">
+      <div class="header-left">
+        <div class="brand-logo-small">✨ QM Meet</div>
+        <div class="room-badge">
+          <span class="live-dot"></span>
+          <span>Phòng: <b id="current-room-text">---</b></span>
+        </div>
+        <button class="btn-copy-room" onclick="copyRoomCode()" title="Sao chép mã phòng">
+          📋 <span>Sao chép mã</span>
+        </button>
+        <span id="host-badge" class="host-indicator" style="display: none;">👑 Host</span>
+        <span class="participant-count-badge" id="participant-count">👥 1 thành viên</span>
+      </div>
+
+      <div class="header-right">
+        <div id="host-alert-box" class="host-alert"></div>
+        <div class="connection-status-pill" id="conn-status-pill">
+          <span class="status-indicator-dot"></span>
+          <span id="conn-status-text">Đang kết nối...</span>
+        </div>
+        <button class="icon-btn" onclick="toggleFullscreen()" title="Toàn màn hình">⛶</button>
+        <button class="icon-btn" id="btn-toggle-chat" onclick="toggleChatPanel()" title="Trò chuyện">
+          💬 <span id="chat-unread-badge" class="badge-count" style="display:none;">0</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area: Grid + Side Chat -->
+    <div class="call-body">
+      <!-- Khung lưới Video -->
+      <main id="video-grid" class="video-grid"></main>
+
+      <!-- Panel Trò Chuyện (Chat Sidebar) -->
+      <aside id="chat-panel" class="chat-panel glass-panel" style="display: none;">
+        <div class="chat-header">
+          <h3>💬 Trò chuyện nhóm</h3>
+          <button class="btn-close-chat" onclick="toggleChatPanel()">✕</button>
+        </div>
+        <div id="chat-messages" class="chat-messages">
+          <div class="chat-system-msg">Chào mừng bạn đến phòng họp! Chúc buổi họp vui vẻ 🎉</div>
+        </div>
+        <form class="chat-input-area" onsubmit="event.preventDefault(); sendChatMessage();">
+          <input type="text" id="chat-input" placeholder="Nhập tin nhắn..." autocomplete="off">
+          <button type="submit" class="btn-send-chat">🚀</button>
+        </form>
+      </aside>
+    </div>
+
+    <!-- Hiệu ứng Icon thả tim bay lên -->
+    <div id="reaction-container" class="reaction-container"></div>
+
+    <!-- Thanh Công Cụ Controls Phía Dưới -->
+    <footer class="toolbar-container">
+      <div class="toolbar glass-toolbar">
+        <button id="btn-toggle-mic" class="tool-btn" onclick="toggleMicrophone()" title="Tắt/Bật Mic">
+          <span class="btn-icon">🎙️</span>
+          <span class="btn-text">Mic</span>
+        </button>
+
+        <button id="btn-toggle-cam" class="tool-btn" onclick="toggleCamera()" title="Tắt/Bật Cam">
+          <span class="btn-icon">📹</span>
+          <span class="btn-text">Cam</span>
+        </button>
+
+        <button id="btn-flip-cam" class="tool-btn tool-btn-sub" onclick="toggleCameraMirror()" title="Lật góc nhìn Cam (Gương)">
+          <span class="btn-icon">🪞</span>
+          <span class="btn-text">Lật Cam</span>
+        </button>
+
+        <button id="btn-share-screen" class="tool-btn" onclick="toggleScreenShare()" title="Chia sẻ màn hình">
+          <span class="btn-icon">🖥️</span>
+          <span class="btn-text">Chia sẻ</span>
+        </button>
+
+        <button id="btn-raise-hand" class="tool-btn" onclick="toggleRaiseHand()" title="Giơ tay phát biểu">
+          <span class="btn-icon">✋</span>
+          <span class="btn-text">Giơ tay</span>
+        </button>
+        
+        <!-- Bảng thả Reaction Emojis -->
+        <div class="reaction-bar">
+          <button onclick="sendReaction('❤️')" title="Yêu thích">❤️</button>
+          <button onclick="sendReaction('👏')" title="Vỗ tay">👏</button>
+          <button onclick="sendReaction('😂')" title="Cười lớn">😂</button>
+          <button onclick="sendReaction('👍')" title="Thích">👍</button>
+          <button onclick="sendReaction('🔥')" title="Bùng cháy">🔥</button>
+          <button onclick="sendReaction('🎉')" title="Ăn mừng">🎉</button>
+          <button onclick="sendReaction('💡')" title="Ý tưởng">💡</button>
+        </div>
+
+        <button class="tool-btn btn-leave" onclick="leaveRoom()" title="Rời khỏi phòng">
+          <span class="btn-icon">📞</span>
+          <span class="btn-text">Rời phòng</span>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Offscreen canvas for frame capture -->
+  <canvas id="capture-canvas" style="display: none;"></canvas>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
